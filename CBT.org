@@ -1,0 +1,4 @@
+* Chapter 3: Do things a Clojure Crash Course
+  #+BEGIN_SRC clojure :results silent
+  (+ 3 4)
+  #+END_SRC

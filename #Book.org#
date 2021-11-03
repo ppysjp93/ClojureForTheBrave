@@ -1,0 +1,1330 @@
+* Chapter 3: Do things a Clojure Crash Course
+** Syntax 
+
+   Clojure code is written in a uniform structure:
+   
+   1) Literal representations of data structures
+   2) Operations 
+
+   #+BEGIN_SRC clojure
+   1
+   "a string" 
+   ["a" "vector" "of" "strings"]
+   #+END_SRC
+
+   #+RESULTS:
+
+   Operations are how you do things, '+' is an example of an operation:
+
+   #+BEGIN_SRC clojure
+   (+ 1 2 3)
+   #+END_SRC
+
+   #+RESULTS:
+   : 6
+   
+   #+BEGIN_SRC clojure
+     (str "It was the panda " "in the library " "with a dust buster")
+   #+END_SRC
+
+   #+RESULTS:
+   : It was the panda in the library with a dust buster
+   
+** Control flow
+
+   This is the special form for the if statement in clojure, it is very familiar! 
+   
+   #+BEGIN_SRC clojure
+     (if true
+       "By Zeus's hammer!"
+       "By Aquaman's trident!")
+   #+END_SRC
+
+   #+RESULTS:
+   : By Zeus's hammer!
+
+   #+BEGIN_SRC clojure
+     (if false
+       "By Zeus's hammer!"
+       "By Aquaman's trident!")
+   #+END_SRC
+
+   #+RESULTS:
+   : By Aquaman's trident!
+
+   Technically an if statement does not need a second branch, which returns nil.
+
+   #+BEGIN_SRC clojure
+     (if false
+       "By Odin's Elbow!")p
+   #+END_SRC
+
+   #+RESULTS:
+
+   There is some new stuff that you should know: there is 'do', which means multiple expressions can be executed on one branch 
+   of your if statement: 
+
+   #+BEGIN_SRC clojure
+     (if true
+       (do (println "Success!")
+	   "By Zeus's hammer!")
+       (do (println "Failure!")
+	   "By Aquaman's trident!"))
+   #+END_SRC
+
+   #+RESULTS:
+   : By Zeus's hammer!
+
+   The above code evaluates both expressions in the repl. 
+
+   There is also 'when' which allow you to do multiple things when there is
+   no else branch, it's a special if:
+
+   #+BEGIN_SRC clojure
+     (when true
+       (println "Success!")
+       "abra cadabra")
+   #+END_SRC
+
+   #+RESULTS:
+   : abra cadabra
+
+** nil, true, false, Truthiness, Equality, and Boolean Expressions
+
+   'nil' is used to indicate no value in clojure
+   there is obviously true and false
+
+   #+BEGIN_SRC clojure
+     (nil? 1)
+   #+END_SRC
+
+   #+RESULTS:
+   : false
+
+   #+BEGIN_SRC clojure
+     (nil? nil)
+   #+END_SRC
+
+   #+RESULTS:
+   : true
+
+   #+BEGIN_SRC clojure
+     (if "bears eat beets"
+       "bears beets Battlestar Galactica")
+   #+END_SRC
+
+   #+RESULTS:
+   : bears beets Battlestar Galactica
+
+   Both 'nil' and 'false' represent logical falsiness.
+
+   The = sign is the equality operator in clojure.
+
+   #+BEGIN_SRC clojure
+     (= 1 1)
+   #+END_SRC
+
+   #+RESULTS:
+   : true
+   
+   #+BEGIN_SRC clojure
+     (= nil nil)
+   #+END_SRC
+
+   #+RESULTS:
+   : true
+   
+   #+BEGIN_SRC clojure
+     (= 1 2)
+   #+END_SRC
+
+   #+RESULTS:
+   : false
+
+   'or' and 'and' are interesting operators and work the same as they do 
+   in sicp or scheme.
+
+** or and and
+*** or
+   or returns either the first truthy value or the last value.
+
+   #+BEGIN_SRC clojure
+     (or false nil :larg_I_mean_venti :why_cant_I_just_say_large)
+   #+END_SRC
+
+   #+RESULTS:
+   : :larg_I_mean_venti
+
+   Here the first truthy value is :larg_I_mean_venti, this is because false
+   is false and in clojure nil is also falsey.
+
+   #+BEGIN_SRC clojure
+     (or (= 0 1) (= "yes" "no"))
+   #+END_SRC
+
+   #+RESULTS:
+   : false
+
+   #+BEGIN_SRC clojure
+     (or nil)
+   #+END_SRC
+
+   #+RESULTS:
+
+   Here nil is returned because it is the last value.
+
+*** and
+    
+    and returns the first falsey value or the last truthy value
+
+   #+BEGIN_SRC clojure
+     (and :free_wifi :hot_coffee)
+   #+END_SRC
+
+   #+RESULTS:
+   : :hot_coffee
+
+   Here the last truthy value is :hot_coffee
+
+   #+BEGIN_SRC clojure
+     (and :feelin_super_cool nil false)
+   #+END_SRC
+
+   #+RESULTS:
+
+   Here the first falsey value is nil
+
+** Naming Values with def
+
+   #+BEGIN_SRC clojure
+     (def failed-protagonist-names
+       ["Larry Potter" "Doreen the Explorer" "The Incrdeible Bulk"])
+   #+END_SRC
+
+   #+RESULTS:
+   : #'user/failed-protagonist-names
+
+   Here failed-protagonist-names has been bound to a string-vector
+
+   #+BEGIN_SRC clojure
+     (defn error-message
+       [severity]
+       (str "OH GOD! IT'S A DISASTER! WE'RE "
+	    (if (= severity :mild)
+	      "MILDLY INCONVENIENCED!"
+	      "DOOOOOOOOOOOOED!")))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'user/error-message
+
+   Here we have created a function that accepts a single argument
+   and then uses that argument to determine what is returned.
+
+   You should see def as a way of defining constants.
+
+** Data Structures
+
+   You can't change a data structure once it is instanciated. So for example
+   the first element of a vector cannot be changed in clojure.
+
+   Numbers are extremely easy to manage as clojure just manages them 
+   for you. 
+
+   Only double quotes are allowed to deliniate strings.
+
+*** COMMENT Maps
+
+    Maps are similar to dictionaries. They're are a way of associating 
+    some vvlaue with some other value.
+
+    #+BEGIN_SRC clojure
+      {:first-name "Charlie"
+       :last-name "McFishwich"}
+    #+END_SRC
+
+    #+RESULTS:
+
+    Here we have associated the key-word :first-name with "Charlie"
+    and :last-name with "McFishwich"
+
+    There are two types of maps, hash-maps and sorted. Here we are 
+    focused on the sorted kind. 
+
+    #+BEGIN_SRC clojure
+      {"string-key" +}
+    #+END_SRC
+
+    Here we have associated the "string-key" with the + function.
+
+    Maps can also be nested: 
+
+    #+BEGIN_SRC clojure
+      {:name {:first "John" :middle "Jacob" :last "Jingleheimerschmidt"}}
+    #+END_SRC
+
+    Map values can be any type: string, numbers, maps, vectors, or even 
+    functions.
+
+    There is also a hash-map function:
+
+    #+BEGIN_SRC clojure
+      (hash-map :a 1 :b 2)
+    #+END_SRC
+
+    You can look up values in maps with the get function: 
+
+    #+BEGIN_SRC clojure
+      (get {:a 1 :b 2} :b)
+    #+END_SRC
+
+    #+RESULTS:
+    : 2
+
+    The below needs to be evaluated in the repl:
+
+    #+BEGIN_SRC clojure
+      (get {:a 0 :b {:c "ho hum"}} :b)
+    #+END_SRC
+
+    #+RESULTS:
+    
+    get will return nil if it doesn't find your key, or you can give it 
+    a default value to return such as "unicorns?"
+
+    #+BEGIN_SRC clojure
+      (get {:a 0 :b 1} :c)
+    #+END_SRC
+
+    #+RESULTS:
+
+    #+BEGIN_SRC clojure
+      (get {:a 0 :b 1} :c "unicorns?")
+    #+END_SRC
+
+    #+RESULTS:
+    : unicorns?
+    
+    There is also the 'get-in' function which allows you to look up values
+    that are in nested maps
+
+    #+BEGIN_SRC clojure
+      (get-in {:a 0 :b {:c "ho hum"}} [:b :c]) 
+    #+END_SRC
+
+    #+RESULTS:
+    : ho hum
+    
+    It's interesting that it uses a vector to do this. 
+
+    Another way to look up a value in a map is to treat the map like a
+    function with the key as its argument: 
+
+    #+BEGIN_SRC clojure
+      ({:name "The Human Coffeepot"} :name)
+    #+END_SRC
+
+    #+RESULTS:
+    : The Human Coffeepot
+
+** Keywords
+   
+   Keywords start with the colon character. They can be used as functions
+   to get the corresponding value in a data structure:
+
+   #+BEGIN_SRC clojure
+     (:a {:a 1 :b 2 :c 3})
+   #+END_SRC
+
+   #+RESULTS:
+   : 1
+
+   This is an example of how to use :a to get the value stored in the map,
+   the same thing using get would be...
+
+   #+BEGIN_SRC clojure
+     (get {:a 1 :b 2 :c 3} :a)
+   #+END_SRC
+
+   #+RESULTS:
+   : 1
+
+   I like the keyword way because it jsut reads nicer.
+
+   #+BEGIN_SRC clojure
+     (:d {:a 1 :b 2 :c 3} "No gnome knows homes like Noah knows")
+   #+END_SRC
+
+   Here we have provided a default value for the expression. 
+
+   Get into the habit of using keywords as functions, I'm sure we will
+   see more of how this is done as we procede with the book.
+
+** Vectors
+
+   A vector is created using square brackets,
+
+   #+BEGIN_SRC clojure
+     (get [3 2 1] 0)
+   #+END_SRC
+
+   above is how you get the first element from a vector. 
+
+   #+BEGIN_SRC clojure
+     (get ["a" {:name "Pugsley Winterbottom"} "c"] 1)
+   #+END_SRC
+
+   #+RESULTS:
+
+   If we send the above to the repl then it returns the dictionary which 
+   is at the first index.
+
+   #+BEGIN_SRC clojure
+     (vector "creepy" "full" "moon")
+   #+END_SRC
+
+   vectors can be created using the vector function as shown above. 
+
+   You can add elements to the end of a vector by using the 'conj' function
+
+   #+BEGIN_SRC clojure
+     (conj [1 2 3] 4)
+   #+END_SRC
+
+   #+RESULTS:
+
+** Lists
+   
+   Lists are created by using the single quote. This makes sense why the 
+   strings must be deliniated using the double quotes
+
+   #+BEGIN_SRC clojure
+     '(1 2 3 4)
+   #+END_SRC
+
+   #+RESULTS:
+
+   The nth element for a list can be gotten by using 'nth'
+
+   #+BEGIN_SRC clojure
+     (nth '(:a :b :c) 0)
+   #+END_SRC
+
+   #+RESULTS:
+   : :a
+
+   Retrieving elements from a vector is quicker than using nth because 
+   nth has to loop down a list. 
+
+   When using 'conj' with a list, elements are added to the front of a list
+
+   #+BEGIN_SRC clojure
+     (conj '(1 2 3) 4)
+   #+END_SRC
+
+   You can create a list using the 'list' function
+
+   #+BEGIN_SRC clojure
+     (list 1 2 3 4)
+   #+END_SRC
+
+   #+RESULTS:
+   
+   Using a list tends to be the case when you are writing a macro or when 
+   you need to easily be able to add items to the beginning of a list. 
+
+** Sets
+
+   Sets are collections of unique vlauese, there are hash sets and sorted 
+   sets in clojure.
+
+   #+BEGIN_SRC clojure
+     #{"kurt vonnegut" 20 :icicle}
+   #+END_SRC
+
+   #+RESULTS:
+   : #{20 :icicle "kurt vonnegut"}
+
+   You can also use hash-set to create a set: 
+
+   #+BEGIN_SRC clojure
+     (hash-set 1 1 2 2)
+   #+END_SRC
+
+   #+RESULTS:
+   : #{1 2}
+
+   Notice that a set can only contain unique values.
+   When you try and create a set with multiple same values then it reduces 
+   to unique values. 
+
+   #+BEGIN_SRC clojure
+     (conj #{:a :b} :b)
+   #+END_SRC
+
+   #+RESULTS:
+   : #{:b :a}
+
+   If you try and add a value that is already contained in the hash set 
+   you get the same hash set. 
+
+   There is also a set function
+
+   #+BEGIN_SRC clojure
+     (set [3 3 3 4 4])
+   #+END_SRC
+
+   #+RESULTS:
+   : #{4 3}
+
+   You can also check for membership within a set using the contains? 
+   function
+
+   #+BEGIN_SRC clojure
+     (contains? #{:a :b} :a)
+   #+END_SRC
+
+   #+RESULTS:
+   : true
+
+   #+BEGIN_SRC clojure
+     (contains? #{:a :b} 3)
+   #+END_SRC
+
+   #+RESULTS:
+   : false
+
+   #+BEGIN_SRC clojure
+     (contains? #{nil} nil)
+   #+END_SRC
+
+   #+RESULTS:
+   : true
+
+   You can also use key words as functions
+
+   #+BEGIN_SRC clojure
+     (:a #{:a :b})
+   #+END_SRC
+
+   #+RESULTS:
+   : :a
+
+   You can also use the get function
+
+   #+BEGIN_SRC clojure
+     (get #{:a :b} :a)
+   #+END_SRC
+
+   #+RESULTS:
+   : :a
+
+   #+BEGIN_SRC clojure
+     (get #{:a nil} nil)
+   #+END_SRC
+
+   #+RESULTS:
+
+   #+BEGIN_SRC clojure
+     (get #{:a :b} "kurt vonnegut")
+   #+END_SRC
+
+   #+RESULTS:
+
+   Testing whether a set contains nil will always return nil so contains? 
+   may be a better option when you are testing specifically for membership.
+
+** Simplicity
+
+   It is better to have 00 functions operate on one data structure than 
+   10 functions on 10 data structures.
+
+** Functions
+*** Calling Functions
+
+    You can create expressions that return functions. In the below case 
+    the first truthy value is +, so the + function is returned
+
+    #+BEGIN_SRC clojure
+      (or + -)
+    #+END_SRC
+
+    #+RESULTS:
+    : #function[clojure.core/+]
+
+    We can also use the functional expression if we want to
+
+    #+BEGIN_SRC clojure
+      ((or + -) 1 2 3)
+    #+END_SRC
+
+    #+RESULTS:
+    : 6
+
+    Here are some more examples of functional expressions
+
+    #+BEGIN_SRC clojure
+      ((and (= 1 1) +) 1 2 3)
+    #+END_SRC
+
+    #+RESULTS:
+    : 6
+
+    #+BEGIN_SRC clojure
+      ((first [+ 0]) 1 2 3)
+    #+END_SRC
+
+    #+RESULTS:
+    : 6
+
+    numbers and strings are not functions. If you get an error which says
+    <x> cannot be cast to clojure.lang.IFn just means that you're trying to 
+    use something as a function when it's not.
+
+    The map function is an example of a function that takes a function as
+    an argument. It is an example of a higher order function: 
+
+    #+BEGIN_SRC clojure
+      (map inc [0 1 2 3 4])
+    #+END_SRC
+
+    #+RESULTS:
+
+    It's important to note that eventhough map was given a vector it
+    returns a list.
+
+*** How functions differ from macros and special forms
+
+    #+BEGIN_SRC clojure
+      (if statement
+	true
+	false)
+    #+END_SRC
+    
+    Clojure's if statement is the same as the ones we are familiar in lisp.
+    Only one of the branches is evaluated dependendent on the statement.
+
+    A special form cannot be used as an argument to a function. 
+    
+    'if' is a special form so the below would never be written in Clojure. 
+
+    #+BEGIN_SRC clojure
+      (map if [1 2 3])
+    #+END_SRC
+    
+*** Defining functions 
+
+    Here is a simple function in clojure that takes an argument and then 
+    returns sa string with the arguments value slotted in it. 
+
+    #+BEGIN_SRC clojure
+      (defn too-enthusiastic
+	"Return a cheer that might be a bit too enthusiastic"
+	[name]
+	(str "OH. MY GOD! " name " YOU ARE MOST DEFINITELY LIKE THE BEST "
+	     "MAN SLASH WOMAN EVER I LOVE YOU AND WE SHOULD RUN AWAY SOMEWHERE!"))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/too-enthusiastic
+
+
+
+    #+BEGIN_SRC clojure
+      (defn no-params
+	[]
+	"I take no parameters!")
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/no-params
+
+
+    #+BEGIN_SRC clojure
+      (defn one-param
+	[x]
+	(str "I take one parameter: " x))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/one-param
+
+    #+BEGIN_SRC clojure
+      (defn two-params
+	[x y]
+	(str "Two parameters! That's nothing! Pah! I will smoosh them "
+	     "together to spite you! " x y))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/two-params
+
+    Different numbers of arguments can cause differnt parts of a body of a 
+    function to be called. This is called arity. 
+
+    #+BEGIN_SRC clojure
+      (defn multi-arity
+	;; 3-arity arguments and body
+	([first-arg second-arg third-arg]
+	 (do-things first-arg second-arg third-arg))
+	;; 2-arity arguments and body
+	([first-arg second-arg]
+	 (do-things first-arg second-arg))
+	;; 1-arity arguments and body
+	([first-arg]
+	 (do-things first-arg)))
+    #+END_SRC
+
+    #+BEGIN_SRC clojure
+      (defn x-chop
+	"Describe the kind of chop you're inflicting on someone"
+	([name chop-type]
+	 (str "I " chop-type " chop " name "! Take that!"))
+	([name]
+	 (x-chop name "karate")))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/x-chop
+
+    #+BEGIN_SRC clojure
+      (x-chop "kaney" "slap")
+    #+END_SRC
+
+    #+RESULTS:
+    : I slap chop kaney! Take that!
+
+    #+BEGIN_SRC clojure
+      (x-chop "kanye")
+    #+END_SRC
+
+    #+RESULTS:
+    : I karate chop kanye! Take that!
+
+    This second evaluation is a bit weird... but it's just a recursive call!
+    (x-chop calls itself with "karate" already supplied as its argument.
+
+    #+BEGIN_SRC clojure
+      (defn weird-arity
+	([]
+	 "Destiny dressed you this morning, my friend, and now Fear is
+	  trying to pull of your pants. If you give up, if you give in, 
+	  you're gonanna end up naked with Fear just standing there laughing
+	  at you dangling unmentionables! - the Tick")
+	([number]
+	 (inc number)))
+    #+END_SRC
+
+    This is an example I was more expecting because each block does 
+    something different dependent on the arguments that are supplied.
+    This is considered bad form creating a function that has two bodies 
+    that are completely unrelated.  
+
+    You can also define variable arity functions. This means that the 
+    arguments supplied are put into a list with the name which is followed
+    by the ampersand.
+
+    #+BEGIN_SRC clojure
+      (defn codger-communication
+	"Documenation: "
+	[whippersnapper]
+	(str "Get off my lawn, " whippersnapper "!!!"))
+
+      (defn codger
+	"Documenation: "
+	[& whippersnappers]
+	(map codger-communication whippersnappers))
+    #+END_SRC
+
+    #+RESULTS:
+
+    #+BEGIN_SRC clojure
+      (codger "Billy" "Anne-Marie" "The Incredible Bulk")
+    #+END_SRC
+
+    #+RESULTS:
+
+    codger-communication is a function that is a applied to a single 
+    string. 
+    This function that is applied to a single string is the applied to 
+    a list of strings via map! It's genious. Really is.
+
+    #+BEGIN_SRC clojure
+      (defn favorite-things
+	"Documenation: "
+	[name & things]
+	(str "Hi, " name ", here are my favoirte things: "
+	     (clojure.string/join ", " things)))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/favorite-things
+
+**** Destructuring
+
+     #+BEGIN_SRC clojure
+       ;; Return the first element of a collection
+       (defn my-first
+	 [[first-thing]] ; Notice that first-thing is withing a vector
+	 first-thing)
+     #+END_SRC
+
+     #+RESULTS:
+     : #'user/my-first
+
+     This is a very foreign to me. It's clear that the argument to 
+     my-first is a vector. I think if you supply a vector, the first element
+     in the vector will be bound to the symbol "first-thing" and then 
+     first-thing is returned. I think that is how it is working... 
+
+     #+BEGIN_SRC clojure
+       (my-first ["oven" "bike" "war-axe"])
+     #+END_SRC
+
+     #+RESULTS:
+     : oven
+
+     This is just a clever way of doing assignment on mass in a 
+     meaning full way.
+
+     You can destructure a vector by naming some of the arguments and then 
+     you can use a rest parameter for the rest of the vector which you 
+     can't be arsed to name.
+
+     #+BEGIN_SRC clojure
+       (defn chooser
+	 [[first-choice second-choice & unimportant-choices]]
+	 (println (str "Your first choice is: " first-choice))
+	 (println (str "Your second choice is: " second-choice))
+	 (println (str "We're ignoring the rest of your choices. "
+		       "Here they are in case you need to cry over them: "
+		       (clojure.string/join ", " unimportant-choices))))
+     #+END_SRC
+
+     #+RESULTS:
+     : #'user/chooser
+
+     You can also destructure maps.
+
+     #+BEGIN_SRC clojure
+       (defn announce-treasure-location
+	 [{:lat lat :lng lng}]
+	 (println (str "Treasure lat: " lat))
+	 (println (str "Treasure lng: " lng)))
+     #+END_SRC
+
+
+
+     I've written the map in an order that makes sense to me, 
+     so it goes {key1 value1 key2 value2 ...} but it does seem as though 
+     clojure has the flexibility to run the map in a weird order IMO, i.e.
+     {value1 key1 value2 key2...} it doesn't seem to matter. I think this 
+     is because it is clear which is the keyword.
+
+     There is a shorter syntax for creating the same function as above
+     
+     #+BEGIN_SRC clojure
+       (defn announce-treasure-location
+	 [{:keys [lat lng]}]
+	 (println (str "Treasure lat: " lat))
+	 (println (str "Treasure lng: " lng)))
+     #+END_SRC
+
+     #+RESULTS:
+     : #'user/announce-treasure-location
+
+     You can see how the syntax has been shortened as a result.
+
+     We can go one step further by using the ':as' keyword.
+
+     #+BEGIN_SRC clojure
+       (defn receive-treasure-location
+	 [{:keys [lat lng] :as treasure-location}]
+	 (println (str "Treasure lat: " lat))
+	 (println (str "Treasure lng: " lng))
+	 (steer-ship! treasure-location))
+     #+END_SRC
+
+     The above doesn't execute, but we see an example of binding a dictionary
+     withing a function to a symbol 'treasure-location' which is then 
+     supplied to the steer-ship! function. Clever.
+
+**** Function Body
+
+     This function contains three forms of which "joe" is spat out. 
+
+     #+BEGIN_SRC clojure
+       (defn illustrative-function
+	 []
+	 (+ 1 304)
+	 30
+	 "joe")
+     #+END_SRC
+
+     #+RESULTS:
+     : #'user/illustrative-function
+
+     Here's another function body which uses an if expression
+
+     #+BEGIN_SRC clojure
+       (defn number-comment
+	 [x]
+	 (if (> x 6)
+	   "Oh my gosh! what a big number!"
+	   "That number's OK, I guess"))
+     #+END_SRC
+
+     #+RESULTS:
+     : #'user/number-comment
+
+     There is no such thing as a special function. They all work the 
+     same. 
+     
+*** Anonymous functions
+
+    There are two ways for creating anonymous functions in Clojure:
+
+    #+BEGIN_SRC clojure
+      (fn [param-list]
+	function-body)
+    #+END_SRC
+
+    We are quite comfortable with these because you have been using loads of these when studying SICP.
+
+    #+BEGIN_SRC clojure
+      (map (fn [name] (str "Hi, " name)) 
+	     ["Darth Vader" "Mr. Magoo"])
+    #+END_SRC
+
+    #+RESULTS:
+    
+    The above will evaluate in the repl. And you can see how the anonymous
+    function has been applied to multiple arguments again very easily. 
+
+    #+BEGIN_SRC clojure
+      ((fn [x] (* x 3)) 8)
+    #+END_SRC
+
+    #+RESULTS:
+    : 24
+
+    Anonymous functions have all the properties of normal functions. 
+    The parameter lists and function bodies work in exactly the same manner.
+    This means you can use destructuring, rest parameters, and so on. You can 
+    even assoiate your anonymous function with a name, which should be 
+    a surprise.  
+
+    #+BEGIN_SRC clojure
+      (def my-special-multiplier (fn [x] (* x 3)))
+    #+END_SRC
+
+    #+BEGIN_SRC clojure
+      (my-special-multiplier 10)
+    #+END_SRC
+
+    There is an even more concise notation for an anonymous function 
+    which is shown below. It is VERY concise.
+
+    #+BEGIN_SRC clojure
+      (#(* % 3) 8)
+    #+END_SRC
+
+    #+RESULTS:
+    : 24
+
+    The #() indicates that there is an anonymous functioni and the
+    % symbol acts as the anonymous argument. Neat. 
+
+    #+BEGIN_SRC clojure
+      (map #(str "hi, " %)
+	   ["Darth Vader" "Mr. Magoo"])
+    #+END_SRC
+
+    #+RESULTS:
+
+    The above evaluates in the repl. 
+
+    If the anonymous function takes more than one argument then you can 
+    indicate this as demonstrated in the following example
+
+    #+BEGIN_SRC clojure
+      (#(str %1 " and " %2) "cornbread" "butter beans")
+    #+END_SRC
+
+    #+RESULTS:
+    : cornbread and butter beans
+
+    You can also pass in the rest parameter if you really want to be a boss
+
+    #+BEGIN_SRC clojure
+      (#(identity %&) 1 "blarg" :yip)
+    #+END_SRC
+
+    #+RESULTS:
+
+*** Returning functions
+
+    There is an explaination of what a closure is here. There are functions 
+    that return other functions. These returned functions are closures. 
+    This means they have access to all the variables that were created 
+    when the function was created. Here is an example: 
+
+    #+BEGIN_SRC clojure
+      (defn inc-maker
+	"Create a custom incrementor"
+	[inc-by]
+	#(+ % inc-by))
+    #+END_SRC
+
+    #+BEGIN_SRC clojure
+      (def inc3 (inc-maker 3))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/inc3
+    
+    #+BEGIN_SRC clojure
+      (inc3 7)
+    #+END_SRC
+
+    #+RESULTS:
+    : 10
+    
+    inc3 the returned function in this case. When this function is created
+    it has access to inc-by. inc-by is in the "scope". I think you need 
+    to think about this a bit more but also think about how this is 
+    evaluated. I think it makes sense kind of.  
+
+** Pulling It All Together
+
+   In this section you will about let expressions, loops and regular 
+   expressions.
+
+   Below we have defined a vector of maps, where each body part's name 
+   and relative size has been given.
+
+   #+BEGIN_SRC clojure
+     (def asym-hobbit-body-parts [{:name "head" :size 3}
+				  {:name "left-eye" :size 1}
+				  {:name "left-ear" :size 1}
+				  {:name "mouth" :size 1}
+				  {:name "nose" :size 1}
+				  {:name "neck" :size 2}
+				  {:name "left-shoulder" :size 3}
+				  {:name "left-upper-arm" :size 3}
+				  {:name "chest" :size 10}
+				  {:name "back" :size 10}
+				  {:name "left-forearm" :size 3}
+				  {:name "abdomen" :size 6}
+				  {:name "left-kidney" :size 1}
+				  {:name "left-hand" :size 2}
+				  {:name "left-knee" :size 2}
+				  {:name "left-thigh" :size 4}
+				  {:name "left-lower-leg" :size 3}
+				  {:name "left-achilles" :size 1}
+				  {:name "left-foot" :size 2}])
+   #+END_SRC
+
+   #+RESULTS:
+   : #'user/asym-hobbit-body-parts
+
+   We then make this helper function
+
+   #+BEGIN_SRC clojure
+     (defn matching-part
+       [part]
+       {:name (clojure.string/replace (:name part) #"^left-" "right-")
+	:size (:size part)})
+
+     (defn symmetrize-body-parts 
+       "Expects a seq of maps that have a :name and :size"
+       [asym-body-parts]
+       (loop [remaining-asym-parts asym-body-parts
+	      final-body-parts []]
+	 (if (empty? remaining-asym-parts)
+	   final-body-parts
+	   (let [[part & remaining] remaining-asym-parts]
+	     (recur remaining
+		    (into final-body-parts
+			  (set [part (matching-part part)])))))))
+   #+END_SRC
+
+   #+RESULTS:
+
+
+   #+BEGIN_SRC clojure
+   (symmetrize-body-parts asym-hobbit-body-parts)
+   #+END_SRC
+
+   #+RESULTS:
+
+*** let
+
+   Let is another way of binding values to symbols: 
+
+   #+BEGIN_SRC clojure
+     (let [x 3]
+       x)
+   #+END_SRC
+
+   #+RESULTS:
+   : 3
+
+   #+BEGIN_SRC clojure
+     (def dalmatian-list
+       ["Pongo" "Perdita" "Puppy 1" "Puppy 2"])
+
+     (let [dalmatians (take 2 dalmatian-list)]
+       dalmatians)
+   #+END_SRC
+
+   let introduces a new scope when it is called. In the case above it 
+   binds dalmatians to the result of the expression (take 2 dalmatian-list).
+
+   #+BEGIN_SRC clojure
+     (def x 0)
+     (let [x 1] x)
+   #+END_SRC
+
+   #+RESULTS:
+
+   In the global scope x is now bound to 0. Within the scope of the let 
+   x is bound to 1. 
+
+   You can reference existing bindings in your let binding: 
+
+   #+BEGIN_SRC clojure
+     (def x 0)
+     (let [x (inc x)] x)
+   #+END_SRC
+
+   #+RESULTS:
+
+   In the above example, the x that is being referred to in the let expression
+   is the x that is instantiated in the global scope.
+
+   #+BEGIN_SRC clojure
+     (let [[pongo & dalmatians] dalmatian-list]
+       [pongo dalmatians])
+   #+END_SRC
+
+   Ok so something cool is going on here. Above is an example of using 
+   destructuring with a rest paramater. pongo is bound to the first element
+   in the dalmatian-list and the rest of the dalmatian list is bound to 
+   dalmatians.
+
+   The value of the let expression is the last form within it which is in this 
+   case the vector [pongo dalmatians].
+   
+   let expressions provide clarity by allowing you to name things. 
+   let expressions allow you to evaluate an expression only once and then use the result.
+   This has value when doing an API call.
+
+   Let's now view that complex let expression again:
+
+   #+BEGIN_SRC clojure
+     (let [[part & remaining] remaining-asym-parts]
+       (recur remaining
+	      (into final-body-parts
+		    (set [part (matching-part part)]))))
+   #+END_SRC
+
+   We will learn about recur later but you can see how part is associated with the first 
+   element in the remaining-asym-parts and remaining is associated with the rest of the
+   list. 
+
+   #+BEGIN_SRC clojure
+     (into final-body-parts
+	   (set [part (matching-part part)]))
+   #+END_SRC
+
+   final-body-parts is the resultant vector-map. Each unique set of 
+   parts are inserted into the final-body-parts vector map, and this is 
+   ensured by using set. part and (matching-part part) can be the same thing
+   which is why set is required to remove duplicates.
+
+   #+BEGIN_SRC clojure
+     (into [] (set [:a :a]))
+   #+END_SRC
+
+   #+RESULTS:
+
+   You need to evalute the parts of this carefully, but what I really like 
+   about the above example is how you see how the data is moving through 
+   the evaluations 
+
+   (set [:a :a]) -> #{:a}
+   
+   (into [] #{:a}) -> [:a]
+
+   You can see how the unique :a has travelled into the vector.  
+
+   Let's see what the let expression would look like if we didn't use it
+
+   #+BEGIN_SRC clojure
+     (recur (rest remaining-asym-parts)
+	    (into final-body-parts
+		  (set [(first remaining-asym-parts) (matching-part (first
+     remaining-asym-parts))])))
+   #+END_SRC
+
+   This is super convoluted, so let allows us to simplify the code by giving
+   local names to things. 
+
+*** loop
+
+    loop is another example of how to perform recursion in clojure. 
+
+    #+BEGIN_SRC clojure
+      (loop [iteration 0]
+	(println (str "Iteration " iteration))
+	(if (> iteration 3)
+	  (println "Goodbye!")
+	  (recur (inc iteration))))
+    #+END_SRC
+
+    #+RESULTS:
+
+    The explaination of what is happening here is insane. 
+    From what I can tell loop allows you to intialize a variable in this 
+    case iteration. recur causes the beginning of the loop to be called 
+    again and again. The loop ends when the if statement returns true 
+    and "Goodbye!". 
+
+    Now let's consider how the book describes things...
+
+    It says iteration is bound to an initial value of 0.  
+    Next a message is produced that contains the current value of iteration.
+    Then the value of iteration is checked and if it is greater than 3 
+    then the loop ends by printing "Goodbye!". 
+    
+    Otherwise we recur... 
+
+    loop is kind of creating an anoymous function that updates itself.
+    it's a self updating anonymous function with a parameter iteration
+    that is called within itslef where each pass its own self update
+    it passese in (inc iteration) rather than iteration. This is how it 
+    updates itself.
+
+    We can define the same loop using a recursive function...
+
+    #+BEGIN_SRC clojure
+      (defn recursive-printer
+	([]
+	 (recursive-printer 0))
+n	([iteration]
+	 (println iteration)
+	 (if (> iteration 3)
+	   (println "Goodbye")
+	   (recursive-printer (inc iteration)))))
+
+      (recursive-printer)
+    #+END_SRC
+    
+    Above is how the book writes the recursive function and below is 
+    how I would write this function: 
+
+    #+BEGIN_SRC clojure
+      (defn recursive-printer
+	"Documenation: "
+	[iteration]
+	(println iteration)
+	(if (> iteration 3)
+	  (println "Goodbye")
+	  (recursive-printer (inc iteration))))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/recursive-printer
+
+    I would then create a wrapper so that you don't need to supply an 
+    argument
+
+    #+BEGIN_SRC clojure
+      (defn recursive-printer
+	[]
+	(defn recursive-printer
+	[iteration]
+	(println iteration)
+	(if (> iteration 3)
+	  (println "Goodbye")
+	  (recursive-printer (inc iteration))))
+	(recursive-printer 0))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/recursive-printer
+
+    Now this form isn't that far from the design in the book...
+
+    #+BEGIN_SRC clojure
+      (defn recursive-printer
+	[]
+	(recursive-printer 0)
+	(defn recursive-printer
+	[iteration]
+	(println iteration)
+	(if (> iteration 3)
+	  (println "Goodbye")
+	  (recursive-printer (inc iteration)))))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/recursive-printer
+
+    Anyway, the recursive function is not the most efficient way of doing 
+    looping in Clojure. It is actually best to use the loop construct. 
+
+*** regular expressions
+
+    regex are tools for performing pattern matching on text. 
+    They start with a # symbol and a surrounded with quotaton marks.
+
+    #"^left-" means match any string that starts with "left-", the carrat
+    is used to mean starts with. 
+
+    You can test regular expressions using the re-find function to see 
+    if there is a match, otherwise nil will be returned when it is 
+    evaluated. So this is a way of building up your reg-expressions! 
+
+    #+BEGIN_SRC clojure
+      (re-find #"^left-" "left-eye")
+    #+END_SRC
+
+    #+RESULTS:
+    : left-
+
+    #+BEGIN_SRC clojure
+      (re-find #"^left-" "cleft-eye")
+    #+END_SRC
+
+    #+RESULTS:
+  
+    #+BEGIN_SRC clojure
+      (re-find #"^left-" "wongleblart")
+    #+END_SRC
+
+    #+RESULTS
+
+    We can see how matching part works in action now: 
+
+    #+BEGIN_SRC clojure
+      (matching-part {:name "left-eye" :size 1})
+    #+END_SRC
+
+    #+RESULTS:
+    
+    #+BEGIN_SRC clojure
+      (matching-part {:name "head" :size 1})
+    #+END_SRC
+
+    #+RESULTS:
+
+    something different dependent on the arguments that are supplied
+
+    
+    
+
+    
+    
+** Better Symmetrizer with reduce

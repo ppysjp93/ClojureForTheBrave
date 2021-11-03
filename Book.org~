@@ -1,0 +1,37 @@
+* Chapter 3: Do things a Clojure Crash Course
+** Syntax 
+
+   Clojure code is written in a uniform structure:
+   
+   1) Literal representations of data structures
+   2) Operations 
+
+   #+BEGIN_SRC clojure
+   1
+   "a string" 
+   ["a" "vector" "of" "strings"]
+   #+END_SRC
+
+   #+RESULTS:
+
+   Operations are how you do things, '+' is an example of an operation:
+
+   #+BEGIN_SRC clojure
+   (+ 1 2 3)
+   #+END_SRC
+
+   #+RESULTS:
+   : 6
+   
+   #+BEGIN_SRC clojure
+     (str "It was the panda " "in the library " "with a dust buster")
+   #+END_SRC
+
+   #+RESULTS:
+   : It was the panda in the library with a dust buster
+   
+** Control flow
+
+   #+BEGIN_SRC clojure
+     ()
+   #+END_SRC
