@@ -813,8 +813,6 @@
 	 (println (str "Treasure lng: " lng)))
      #+END_SRC
 
-
-
      I've written the map in an order that makes sense to me, 
      so it goes {key1 value1 key2 value2 ...} but it does seem as though 
      clojure has the flexibility to run the map in a weird order IMO, i.e.
@@ -1212,7 +1210,7 @@
       (defn recursive-printer
 	([]
 	 (recursive-printer 0))
-n	([iteration]
+	([iteration]
 	 (println iteration)
 	 (if (> iteration 3)
 	   (println "Goodbye")
@@ -1320,8 +1318,461 @@ n	([iteration]
 
     #+RESULTS:
 
-    
-    
+    something different dependent on the arguments that are supplied
 
     
+** Better Symmetrizer with reduce
+
+    There is an inbuilt abstraction in clojure for the process 
+   "process each element in a sequence and build a result". The function
+   for this is called reduce.
+
+   #+BEGIN_SRC clojure
+     (reduce + [1 2 3 4])
+   #+END_SRC
+
+   #+RESULTS:
+   : 10
+
+   This is like telling clojure to do this 
+
+   #+BEGIN_SRC clojure
+     (+ (+ (+ 1 2) 3) 4)
+   #+END_SRC
+
+   #+RESULTS:
+   : 10
+
+   So let's now think about how exactly the reduce function is working
+
+   1) Apply the given function to the first two elements of a sequence
+
+   2) Apply the given function to the result and the next element of the 
+      sequence
+
+   3) Keep repeating step two until the end of the sequence
+
+
+   It's also important to note that reduce also takes an optional intial 
+   value
+
+   #+BEGIN_SRC clojure
+     (reduce + 15 [1 2 3 4])
+   #+END_SRC
+
+   #+RESULTS:
+   : 25
+
+   The book now takes us to an implementation of how reduce could be 
+   implemented: 
+
+   #+BEGIN_SRC clojure
+     (defn my-reduce
+       ([f initial coll]
+	(loop [result initial
+	       remaining coll]
+	  (if (empty? remaining)
+	    result
+	    (recur (f result (first remaining)) (rest remaining)))))
+       ([f [head & tail]]
+	(my-reduce f head tail)))
+   #+END_SRC
+
+   Now we have a description of how my-reduce should work but let's see
+   if we can implement it using recursion ourselves and then convert it 
+   to the form that we see above which uses the loop construct.
+
+*** Exercise: Design your own reduce
+
+    reduce is an inbuilt function in Clojure and is an extremely useful
+    abstraction for bulding a result from a sequence of elements 
+
+    The way that reduce works is as follows:
+
+    1) Apply the given function to the first two elements of a sequence
+
+    2) Apply the given function to the result and the next element of the 
+      sequence
+
+    3) Keep repeating step two until the end of the sequence
+
+    So for example:    
+
+    (reduce + [1 2 3 4]) 
     
+    tells Clojure to evaluate something like this: 
+
+    (+ (+ (+ 1 2) 3) 4)
+
+    In Clojure for the Brave and True we are given this example 
+    for how reduce could be written in Clojure.
+
+    reduce can also take an intial argument
+
+    (reduce + 15 [1 2 3 4]) -> 25
+
+    #+BEGIN_SRC clojure
+     (defn CLBT-reduce
+       ([f initial coll]
+	(loop [result initial
+	       remaining coll]
+	  (if (empty? remaining)
+	    result
+	    (recur (f result (first remaining)) (rest remaining)))))
+       ([f [head & tail]]
+	(my-reduce f head tail)))
+   #+END_SRC
+
+    This version is even more powerful because it also takes into 
+    account an initial starting value.
+ 
+    The goal of this exercise is to emulate how this function could have 
+    been designed from first principles using the techniques learnt in 
+    Structure and Interpretation of Computer programs build a functioning 
+    version of reduce called "my-reduce". 
+ 
+    Once this has been done, make use of the extra tools that clojure gives
+    you to refactor your version of my-reduce so that it looks like the one 
+    which is given in Clojure for the Brave and True.
+
+    Then make use of reduce with several functions of your own design to 
+    make a vector of maps containing data you wish. 
+
+**** First Thoughts
+
+    So we are trying to implement the simplest form of reduce
+    which will take the vector and recursively break it down.
+    I want to do the simplesr case which takes a function that is arithmentic
+    and a vector as argument. We can worry about more interesting arguments
+    later.
+
+    Let's build this up then... 
+
+**** Case 1
+     
+     f = + and coll = [1] -> 1 
+ 
+     The reason being that the "second element" is nil and the "result" 
+     is the first element. 
+     So how do we define the "second element" a.k.a the first element of the 
+     rest? 
+     Well it's the "first" element of the rest. 
+     If the first element of the rest is nil then our function should return
+     the result. 
+     We should bind result to the first element then... 
+     However, I think we can take adavantage of the destructuring that is inbuilt
+     into clojure to make this easier for us.   
+ 
+     #+BEGIN_SRC clojure
+     (defn my-reduce
+       [f coll]
+       (let [[first second & rest] coll]
+	 (println "first: " first "second: " second)))
+     #+END_SRC
+ 
+     Side Note: Does destructuring work for functions with multiple arguments
+     of different type? I don't think it does having tried and done some reading.
+ 
+     Ok so let's just get this first case to work in the way we expect.
+ 
+     #+BEGIN_SRC clojure
+     (defn my-reduce
+       [f coll]
+       (let [[first second & rest] coll]
+	 (if (nil? second)
+	   first)))
+     #+END_SRC
+ 
+     #+RESULTS:
+     : #'user/my-reduce
+ 
+     #+BEGIN_SRC clojure
+       (my-reduce + [1])
+     #+END_SRC
+
+     #+RESULTS:
+     : 1
+
+**** Case 2 
+
+     So we now want to extend the function out so that it works 
+     for more complex cases as stated below: 
+
+     f = + and coll = [1 2] -> 3
+    
+     f = - and coll = [3 2 1] -> 0  
+
+     f = - and coll = [1 2 3] -> -4 
+
+     We need a value to be returned if the vector has 2 values which is 
+     why I've introduced a let-if block which allows me to return a value 
+     if I have a vector of only two values. 
+     At this point, I know I need a recursive call of the function if I 
+     have a vector of 3 or more values so the final step is to make sure 
+     that the recursive call does what I want it to do. 
+     We know that we are constructing the result with the function always 
+     as at the first position i.e. (f(f(f(f...)...)...)...) 
+     so that's why it goes first in the final expression. 
+     The function has to be applied to the result and the next element of 
+     the sequence and the next element of element has to be a my-reduce 
+     expression where the rest is the input argument hence...
+    
+     #+BEGIN_SRC clojure
+     (defn my-reduce
+       [f coll]
+       (let [[first second & rest] coll]
+	 (if (nil? second)
+	   first
+	   (let [result (f first second)]
+	     (if (nil? rest)
+	       result
+	       (f result (my-reduce f rest)))))))
+     #+END_SRC 
+
+     #+BEGIN_SRC clojure
+     (my-reduce + [1 2])
+     #+END_SRC
+
+     #+RESULTS:
+     : 3
+
+     #+BEGIN_SRC clojure
+     (my-reduce - [3 2 1])
+     #+END_SRC
+
+     #+RESULTS:
+     : 0
+
+     #+BEGIN_SRC clojure
+     (my-reduce - [1 2 3])
+     #+END_SRC
+
+     #+RESULTS:
+     : -4
+
+**** Case 3
+
+     #+BEGIN_SRC clojure
+       (defn my-reduce
+	 [f initial coll]
+	 (let [[first-of-coll second-of-coll & rest] coll]
+	   (if (nil? second-of-coll)
+	     (f initial first-of-coll)
+	     (f (f initial first-of-coll)
+		(my-reduce-recur second-of-coll rest)))))
+     #+END_SRC 
+
+     This is a really interesting problem but it is also difficult
+     because trying to slot in the centre of the evaluation 
+     is actually really difficult when dealing with a number 
+     and a vector. 
+     At the moment I can think something that will evaluate like
+     
+     (f (f initial first) (f (f (f .... (f second third) fourth ...)))
+
+     and this isn't what we are after and I'm just not sure what to 
+     do  and I don't want to waste anymore time trying for 
+     now. I may come back to this one day when I'm better at lisp.
+     Continue.
+**** Converting my-reduce so that it uses the loop construct
+
+     #+BEGIN_SRC clojure
+       (loop [iteration 0]
+	 (println (str "Iteration " iteration))
+	 (if (> iteration 3)
+	   (println "Goodbye!")
+	   (recur (inc iteration))))
+     #+END_SRC
+    
+     #+BEGIN_SRC clojure
+       (defn my-reduce
+	 [f coll]
+	 (let [[first second & rest] coll]
+	   (if (nil? second)
+	     first
+	     (let [result (f first second)]
+	       (if (nil? rest)
+		 result
+		 (f result (my-reduce f rest)))))))
+     #+END_SRC 
+
+     So loop allows you to initialize a variable and then build a 
+     result from the loop.
+
+     #+BEGIN_SRC clojure
+       (defn my-reduce
+	 [f coll]
+	 (loop [remaining coll
+		result 0]
+	   (if (empty? remaining)
+	     result
+	     (let [[part & rest-of-remaining] remaining]
+	       (recur rest-of-remaining (f part result))))))
+     #+END_SRC
+
+     #+RESULTS:
+     : #'user/my-reduce
+
+     I'm not sure how you would make this more general and I also 
+     have no idea how this is evalauting.
+
+     Using a loop forces you to decide what the data structure that
+     is going to be out is going to be. 
+
+     reduce on the other hand is an interesting abstraction because
+     you can feed it different types of arguments and it will produce
+     different types of data. 
+
+     This actually isn't the case if we remind ourselves of 
+     how it could be implmented. 
+
+     #+BEGIN_SRC clojure
+       (defn my-reduce
+	 ([f initial coll]
+	  (loop [result initial
+		 remaining coll]
+	    (if (empty? remaining)
+	      result
+	      (recur (f result (first remaining)) (rest remaining)))))
+	 ([f [head & tail]]
+	  (my-reduce f head tail)))
+     #+END_SRC
+
+   Anyway, we have now spend sometime thinking about reduce and how it 
+   is a powerful abstraction. Let's now see it in use as it's refactored 
+   into symmetrize-body-parts
+
+   #+BEGIN_SRC clojure
+     (defn matching-part
+       [part]
+       {:name (clojure.string/replace (:name part) #"^left-" "right-")
+	:size (:size part)})
+
+     (defn better-symmetrize-body-parts
+       "Expects a seq of map that have a :name and :size"
+       [asym-body-parts]
+       (reduce (fn [final-body-parts part]
+		 (into final-body-parts (set [part (matching-part part)])))
+	       []
+	       asym-body-parts))
+
+     ;(better-symmetrize-body-parts asym-hobbit-body-parts)
+
+   #+END_SRC
+
+   #+RESULTS:
+
+*** COMMENT Spider-Expander
+
+    If the body part contains leg or it contains eye we want to 
+    have a set of legs and a set of eyes created. 
+    
+    To do this we are going to use the matching part from earlier
+    to create a function as a template. 
+
+    We are also probably going to want to use reduce to create 
+    our spider expander... 
+
+    What we are trying to do is to make symmetrize-body-parts
+    more generic. 
+    
+    We want the case where if one of the maps in the 
+    asym-hobbit-parts contains "eye", "shoulder", "arm", 
+    "upper-arm", "forearm", "hand", "knee", "thigh", "leg", 
+    "achilles", "foot" then we want to have our own special 
+    function for that... 
+
+    Well we can make a more general version of symmetrize-body-parts
+    by adding a function to the arguments that are passed in and 
+    calling the new function expand-body-parts<sclojure
+
+    #+BEGIN_SRC clojure
+      (defn expand-body-parts
+	"Expects a seq of map that have a :name and :size"
+	[body-parts f]
+	(reduce (fn [final-body-parts part]
+		  (into final-body-parts (f part)))
+		[]
+		body-parts))
+
+      
+    #+END_SRC
+
+    This now means we can rewrite symmetrize-body-parts in terms
+    of expand-body-parts I think. 
+
+    #+BEGIN_SRC clojure
+      (defn symmetrize-body-parts
+	"Documenation: "
+	[asym-body-parts]
+	(expand-body-parts asym-body-parts 
+			   (fn [part]
+			     (matching-part part)))) 
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/symmetrize-body-parts
+
+    Oh baby look how nice and easy this looks to use.
+
+    It's just so dreamy and nice to use. 
+
+    I'm a bit confused why we no longer need the anonymous function 
+    to have a body of (set [part (f part)]). But at the same time 
+    I kind of don't really care! It works. Move on.
+    
+** Hobbit Violence
+
+   We are now going to define hit which will hit the random body
+   parts at will
+
+   #+BEGIN_SRC clojure
+     (defn hit
+       [asym-body-parts]
+       (let [sym-parts (better-symmetrize-body-parts asym-body-parts)
+	     body-part-size-sum (reduce + (map :size sym-parts))
+	     target (rand body-part-size-sum)]
+	 (loop [[part & remaining] sym-parts
+		accumulated-size (:size part)]
+	   (if (> accumulated-size target)
+	     part
+	     (recur remaining (+ accumulated-size (:size (first remaining))))))))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'user/hit
+
+   Let's break this down: 
+
+   #+BEGIN_SRC clojure
+     (def sym-parts (better-symmetrize-body-parts asym-hobbit-body-parts))
+   #+END_SRC
+
+   So the map creates a list of all the numbers associated with :size
+   that's in the vector map.
+
+   #+BEGIN_SRC clojure
+     (def body-part-size-sum (reduce + (map :size sym-parts)))
+   #+END_SRC
+
+   The rand function then generates a number between 1 and the 
+   body-part-size-sum which is 85 in this case. 
+
+   #+BEGIN_SRC clojure
+      (def target (rand body-part-size-sum))
+   #+END_SRC
+
+   #+RESULTS:
+   : #'user/target
+
+   The loop then processes the parts and as it loops it aggregates
+   acculated-size on each pass of the loop until it is greater than
+   the target. It is at this point that the random part is spat 
+   out. 
+
+   #+BEGIN_SRC clojure
+   (hit asym-hobbit-body-parts)
+   #+END_SRC
+
+   #+RESULTS:
+
