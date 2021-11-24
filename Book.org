@@ -1,5 +1,4 @@
-* Chapter 3: Do things a Clojure Crash Course
-** Syntax 
+* Chapter 3: Do things a Clojure Crash Course** Syntax 
 
    Clojure code is written in a uniform structure:
    
@@ -1774,5 +1773,1018 @@
    (hit asym-hobbit-body-parts)
    #+END_SRC
 
+   #+RESULT
+* Chapter 4: Core Funtions in Depth
+** Programming to Abstractions
+
+   Functions like 'map' work on all the different data structures
+   in clojure. This is different to elisp where there is a map which
+   works for a hash-set and a map for a sequence and so on. 
+   There isn't an overarching map, for some reason. 
+   
+*** Treating Lists, Vectors, Sets, and Maps as Sequences
+
+    Map is best thought in terms of the sequence abstraction.
+    As in a collection of objects with before and after relation-
+    ships. A -> B -> C and so on... 
+
+    map and reduce are examples of functions that are best thought
+    interms of the sequence abstraction, in that they take "sequences"
+    as objects.
+
+    "seq functions" is a term that you will hear.
+
+    The core sequence functions are first, rest and cons.
+
+    #+BEGIN_SRC clojure
+      (defn titleize
+	"Documenation: "
+	[topic]
+	(str topic " for the Brave and True"))
+    #+END_SRC
+
+    We can now use titleize as a functional argument as we map to
+    the following vector, list, set or hashmap
+
+    #+BEGIN_SRC clojure
+      (map titleize ["Hamsters" "Ragnarok"])
+      (map titleize '("Empathy" "Decorating"))
+      (map titleize #{"Elbows" "Soap Carving"})
+      (map #(titleize (second %)) {:uncomfortable-thing "Winking"})
+    #+END_SRC
+
+    This is all a bit self-explainitory. 
+    map works identically with vectors, lists. It can also work with
+    unsorted sets.
+    titlize uses the string function which acts on topic which is 
+    its argument. topic must be an object that can be "strung" 
+    together I suppose.
+
+    This suggests to me that it becomes a bit of a game to get 
+    first, rest and cons to work.
+
+*** first, rest, and cons
+
+    If you can perform first, rest and cons on the datastructure
+    then it is open to using the seq library in clojure.
+
+    The book goes on to implement an example of how map could be 
+    implemented on a linked list in javascript. It then says that
+    if first, rest and cons was implemented for another datastructure
+    like a vector for example, then map could be used in the exact
+    same way.
+
+*** Abstraction Through Direction
+     
+    We are then briefly told about how different function bodiese 
+    are called dependent on the datastructure that is input into 
+    the function. A fancy name is given for this which is called 
+    polymorphic dispatch. 
+
+    Clojure also does a very light type conversion when any of the 
+    functions from the seq library are called. This type conversion
+    is performed on the data structure and is called... you guessed
+    it 'seq'. 
+
+    #+BEGIN_SRC clojure
+      (seq '(1 2 3))
+      (seq [1 2 3])
+      (seq #{1 2 3})
+      (seq {:name "Bill Comopton" :occupation "Dead mopey guy"})
+    #+END_SRC   
+
+    2 important details come from this. 
+
+    seq always returns a datastructure that looks like a list. 
+    
+    The seq of a map {} treats the map as a list of vectors.
+    
+    To convert a seq back into a map you use into and initialise it 
+    with a map {}. 
+
+    #+BEGIN_SRC clojure
+      (into {} (seq {:a 1 :b 2 :c 3}))
+    #+END_SRC
+
+** Seq Function Examples
+*** map
+
+    2 new tasks that map can do: 
+
+    1) multiple collection arguments
+    2) collection of functions as argument
+
+    #+BEGIN_SRC clojure
+      (map inc [ 1 2 3])
+    #+END_SRC
+
+    You can also map multiple collections
+
+    #+BEGIN_SRC clojure
+      (map str ["a" "b" "c"] 
+	       ["A" "B" "C"]
+	       ["1" "2" "3"])
+    #+END_SRC
+
+    You can imagine str is being applied to the vertical lists 
+
+    #+BEGIN_SRC clojure
+      (list (str "a" "A" "1") (str "b" "B" "2") (str "c" "C" "3"))
+    #+END_SRC
+
+    #+RESULTS:
+    
+    Here is a more interesting example of what you can do with 
+    map over multiple collections 
+
+    #+BEGIN_SRC clojure
+      (def human-consumption [8.1 7.3 6.6 5.0])
+      (def critter-consumpition [0.0 0.2 0.3 1.1])
+      (defn unify-diet-data
+	"Documenation: "
+	[human critter]
+	{:human human
+	 :critter critter})
+
+      (map unify-diet-data human-consumption critter-consumpition)
+    #+END_SRC
+
+    Here is an example of passing map a collection of functions:
+
+    #+BEGIN_SRC clojure
+      (def sum #(reduce + %))
+      (def avg #(/ (sum %) (count %)))
+      (defn stats
+	"Documenation: "
+	[numbers]
+	(map #(% numbers) [sum count avg]))
+
+      (stats [3 4 10])
+      (stats [80 1 44 13 6])
+    #+END_SRC
+
+    You can see how in stats that each of the arguments 
+    are being applied to numbers which results in a table for the
+    first example as shown below.
+
+
+    | sum | count |  avg |
+    |-----+-------+------|
+    |   3 |     3 |    3 |
+    |   4 |     4 |    4 |
+    |  10 |    10 |   10 |
+    |-----+-------+------|
+    |  17 |     3 | 17/3 |
+    |     |       |      |
+
+
+    This is very intriging because you can just spend your time 
+    making functions and then the data can just get munged! 
+
+    You can also use map to retrieve data from a map
+
+    #+BEGIN_SRC clojure
+      (def identities
+	[{:alias "Batman" :real "Bruce Wayne"}
+	 {:alias "Spider-Man" :real "Peter Parker"}
+	 {:alias "Santa" :real "Your mom"}
+	 {:alias "Easter Bunny" :real "Your dad"}])
+
+      (map :real identities)
+    #+END_SRC
+
+*** reduce
+
+    Some more ways to use reduce 
+
+    1) trans a map's {} values producing a new map {} with the same 
+       keys but with updated values
+
+       #+BEGIN_SRC clojure
+	 (reduce (fn [new-map [key val]]
+		   (assoc new-map key (inc val)))
+		 {}
+		 {:max 30 :min 10})
+       #+END_SRC
+
+       #+RESULTS:
+
+       Remember how seq functions treat map's {} as a sequence of 
+       vectors, so in this the collection that reduce works on 
+       becomes ([:max 30] [:min 10]). 
+
+       You can think of the above passiing the first vector-pair
+       into assoc
+
+       #+BEGIN_SRC clojure
+	 (def first-assoc (assoc {} :max (inc 30)))
+
+	 first-assoc
+
+	 (def second-assoc (assoc first-assoc :min (inc 10)))
+
+	 second-assoc
+       #+END_SRC
+
+       #+RESULTS:
+
+       And then it keeps on going to produce the final map {} 
+       where the values have 
+
+    2) You can also use reduce to filter out keys from a map 
+       based on their value
+
+       #+BEGIN_SRC clojure
+	 (reduce (fn [new-map [key val]]
+		   (if (> val 4)
+		     (assoc new-map key val)
+		     new-map))
+		 {}
+		 {:human 4.1 :critter 3.9})
+       #+END_SRC
+
+       Makes sense.
+
+**** Defining map in terms of reduce
+
+     An attempts of this has been made in the ch_4_ex project.
+
+*** take, drop, take-while, and drop-while
+
+    take and drop are from the same family of functions. 
+    
+    take gives the first n elements of a sequence 
+
+    drop give the sequence with the first n elements removed.  
+
+    #+BEGIN_SRC clojure
+      (take 3 [1 2 3 4 5 6 7 8 9 10])
+
+      (drop 3 [1 2 3 4 5 6 7 8 9 10])
+    #+END_SRC
+
+    These functions have cousins take-while and drop-while which
+    take an additional predicate functional argument.
+
+    #+BEGIN_SRC clojure
+      (def food-journal
+	[{:month 1 :day 1 :human 5.3 :critter 2.3}
+	 {:month 1 :day 2 :human 5.1 :critter 2.0}
+	 {:month 2 :day 1 :human 4.9 :critter 2.1}
+	 {:month 2 :day 2 :human 5.0 :critter 2.5}
+	 {:month 3 :day 1 :human 4.2 :critter 3.3}
+	 {:month 3 :day 2 :human 4.0 :critter 3.8}
+	 {:month 4 :day 1 :human 3.7 :critter 3.9}
+	 {:month 4 :day 2 :human 3.7 :critter 3.6}])
+    #+END_SRC
+
+    #+BEGIN_SRC clojure
+      (def month-data [1 1 2 2 3 3 4 4])
+      (def day-data [1 2 1 2 1 2 1 2])
+      (def human-data [5.3 5.1 4.9 5.0 4.2 4.0 3.7 3.7])
+      (def critter-data [2.3 2.0 2.1 2.5 3.3 3.8 3.9 3.6])
+
+      (defn unify-month-day-human-critter
+	"Documenation: "
+	[month day human critter]
+	{:month month :day day :human human :critter critter})
+
+      (def food-journal
+	(map unify-month-day-human-critter month-data day-data human-data critter-data))
+    #+END_SRC
+
+    #+BEGIN_SRC clojure
+      (take-while #(< (:month %) 3) food-journal)
+    #+END_SRC
+
+    take-while uses the predicate anonymous function takes all
+    the values that are less than 3.
+    
+
+    #+BEGIN_SRC clojure
+      (drop-while #(< (:month %) 3) food-journal)
+    #+END_SRC
+
+    here drop-while uses the predicate anonymous function to drop
+    all the values that are less that 3. 
+
+    You can use take-while and drop-while in combination
+
+    #+BEGIN_SRC clojure
+      (take-while #(< (:month %) 4)
+		 (drop-while #(< (:month %) 2) food-journal))
+    #+END_SRC
+    
+    This selects all the data that is in month 3. 
+    
+*** filter and some 
+    
+    You use filter to select all the results that match a 
+    predicate
+
+    #+BEGIN_SRC clojure
+      (filter #(< (:human %) 5) food-journal)
+    #+END_SRC
+
+    
+    You could have used filter to get the same result as the take
+    while from earlier
+
+    #+BEGIN_SRC clojure
+      (filter #(< (:month %) 3) food-journal)
+    #+END_SRC
+
+    However sometimes you don't want to process the whole list 
+    which means that you should use filter. 
+
+    Sometimes you want to know if a collection contains a any 
+    values that test true for some predicate. The some function 
+    allows you to test this
+
+    #+BEGIN_SRC clojure
+      (some #(> (:critter %) 5) food-journal)
+      (some #(> (:critter %) 3) food-journal)
+    #+END_SRC
+
+    If you want to return the entry that has the critter value 
+    equal to 3 you can modify some so that instead of returning 
+    true or false it actually returns a value
+
+    #+BEGIN_SRC clojure
+      (some #(and (> (:critter %) 3) %) food-journal)
+    #+END_SRC
+
+    #+RESULTS:
+
+*** sort and sort-by
+
+    You can sort elements with the sort function 
+
+    #+BEGIN_SRC clojure
+      (sort [3 1 2])
+    #+END_SRC
+
+    You can also use sort-by which takes an additional functinal
+    argument to modify your sorts if you wish. 
+    In the following case 'count' modifies the sort which would 
+    normally be done alphabetically so that it is instead done 
+    by the number of letters that are in the string. 
+    I think whatever the function does it must return a number 
+    for each element so that the sorting can be done. That would
+    be my guess.
+
+
+    
+*** concat
+
+    #+BEGIN_SRC clojure
+      (concat [1 2] [3 4])
+    #+END_SRC
+
+** Lazy Seqs
+
+   Delaying evaluation is a useful tool. Functions like map 
+   and filter return "lazy seqs". This means that their members
+   are not accessible until ou try to access them.  
+   Deffering computation until it is needed is a very effective 
+   way of programming. 
+
+*** Demonstrating Lazy Seq Efficiency
+    
+    #+BEGIN_SRC clojure
+      (def blood-puns [false false true true])
+      (def pulse [true true false true])
+      (def v_name ["McFishwich" "McMackson" "Damon Salvatore" "Mickey Mouse"])
+      (def number [0 1 2 3])
+
+      (defn unify-blood-puns-pulse-v_name
+	"Documenation: "
+	[blood-puns pulse v_name]
+	{:makes-blood-puns? blood-puns :has-pulse? pulse :name v_name})
+
+      (def vampires
+	(map unify-blood-puns-pulse-v_name blood-puns pulse v_name))
+    #+END_SRC
+
+    Can't build this up using what we've learned so far so here
+    is the manual input for vampire-database
+
+    #+BEGIN_SRC clojure
+      (def vampire-database
+	{0 {:makes-blood-puns? false, :has-pulse? true :name "McFishwich"}
+	 1 {:makes-blood-puns? false, :has-pulse? true :name "McMackson"}
+	 2 {:makes-blood-puns? true, :has-pulse? false :name "Damon Salvatore"}
+	 3 {:makes-blood-puns? true, :has-pulse? true :name "Mickey Mouse"}})
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/vampire-database
+
+    We have a very fast function to retrieve each vampire: 
+
+    #+BEGIN_SRC clojure
+      (defn vampire-related-details
+	"Documenation: "
+	[social-security-number]
+	(Thread/sleep 1000)
+	(get vampire-database social-security-number))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/vampire-related-details
+
+    We then have a function to test whether we have a vampire:
+
+    #+BEGIN_SRC clojure
+      (defn vampire?
+	"Documenation: "
+	[record]
+	(and (:makes-blood-puns? record)
+	     (not (:has-pulse? record))
+	     record))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/vampire?
+
+     #+BEGIN_SRC clojure
+      (defn identify-vampire
+	"Documenation: "
+	[social-security-numbers]
+	(first (filter vampire?
+		       (map vampire-related-details social-security-numbers))))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/identify-vampire
+
+    vampire-related-details takes one second to loop up an entry
+    from the database. vampire returns a record if it passes the 
+    vampire test. identify-vampire maps Social Security numbers
+    to databse records and then returns the first record that 
+    indicates vampirism. 
+
+    #+BEGIN_SRC clojure
+      (time (vampire-related-details 0))
+    #+END_SRC
+    
+    The key thing this section is trying to put accross is that 
+    map evaluates lazily which means that you can build up 
+    a recipe of how functions are applied to a set using map
+    but it's only at the point of retrieval that those functions 
+    will be evaluated and a value is returned.  
+
+    
+    #+BEGIN_SRC clojure
+      (time (def mapped-details (map vampire-related-details (range 0 1000000))))
+    #+END_SRC
+
+    The first time we decide to realise an element for a lazy seq
+    this can take more time. This is because the way that the 
+    evaluater does the evaluation is by using chunking, which means
+    not only the first element is evaluated but all 30 are evaluated
+    for example. 
+
+    This operation takes barely any time at all. This is because 
+    range returns a lazy sequence that isn't realised and then 
+    map is applied to this sequence to return another sequence, 
+    which also isn't realised. Doing things this way means that 
+    we are telling the computer how to evaluate something without 
+    it actually performing the evaluation. This saves time. 
+
+    There are two parts two a lazy seq. A recipe for how to realize
+    the elements of a sequence and the elements that have been 
+    realized so far.
+
+    Every time you request an unrealized element, the lazy seq will
+    use its recipe to generate the requested element.
+
+    #+BEGIN_SRC clojure
+      (time (first mapped-details))
+    #+END_SRC
+
+    However when an element is realized a chunk of elements are 
+    realised, not just one, this means the first time things are
+    realised this takes more time. However once they are realised
+    they are much quicker to realise which is why when you evaluate
+    this a second time then you get a much quicker time.
+
+*** Infinite Sequences
+
+    There are a few functions in Clojure that allow you to create
+    infinite sequences. 
+
+    
+    #+BEGIN_SRC clojure
+      (concat (take 8 (repeat "na")) ["Batman!"])
+    #+END_SRC
+
+    There is also the function repeatedly which allows you to 
+    provide a function so that you can to generate each element 
+    in the sequence. 
+
+
+    #+BEGIN_SRC clojure
+      (take 3 (repeatedly (fn [] (rand-int 10))))
+    #+END_SRC
+
+    
+    #+BEGIN_SRC clojure
+      (defn even-numbers
+	"Documenation: "
+	([] (even-numbers 0))
+	([n] (cons n (lazy-seq (even-numbers (+ n 2))))))
+    #+END_SRC
+
+    So yeah this is how you creatte an infinite list of even 
+    numbers. When you want to realize this list you could do the 
+    follow to get the first 10. 
+
+
+    #+BEGIN_SRC clojure
+      (take 10 (even-numbers))
+    #+END_SRC
+
+** The Collection Abstraction
+
+   There are a couple of initial functions that are associated
+   with this abstraction 
+
+
+   #+BEGIN_SRC clojure
+     (empty? [])
+   #+END_SRC
+
    #+RESULTS:
+   : true
+
+   #+BEGIN_SRC clojure
+     (empty? ["no!"])
+   #+END_SRC
+
+   #+RESULTS:
+   : false
+
+*** into    
+    
+    One of the most important collection functions is into.
+    Many seq functions return a seq and often you want to convert
+    back to the original data structure that you were working 
+    with and so into allows you to do that. 
+    #+BEGIN_SRC clojure
+      (map identity {:sunlight-reaction "Glitter!"})
+    #+END_SRC
+
+    As we know indentity is the function that returns the thing
+    without any change.
+
+    
+    #+BEGIN_SRC clojure
+      (into {} (map identity {:sunlight-reaction "Glitter!"}))
+    #+END_SRC
+
+    into doesn't just work with maps {} it also works with vectors
+    as well 
+
+    
+    #+BEGIN_SRC clojure
+      (map identity [:garlic :sesame-oil :fried-eggs])
+
+      (into [] (map identity [:garlic :sesame-oil :fried-eggs]))
+    #+END_SRC
+
+    You can also use into to go from one data structure to another
+
+    
+    #+BEGIN_SRC clojure
+      (map identity [:garlic-clove :garlic-clove])
+
+      (into #{} (map identity [:garlic-clove :garlic-clove]))
+    #+END_SRC
+
+    The first argument of into doesn't have to be empty either
+
+
+    Below is how you add elements to a map
+    
+    #+BEGIN_SRC clojure
+      (into {:favorite-emotion "gloomy"} [[:sunlight-reaction "glitter!"]])
+    #+END_SRC
+    
+    And below is how you can add elements to a vector.
+
+    #+BEGIN_SRC clojure
+      (into ["Cherry"] '("pine" "spruce"))
+    #+END_SRC
+
+    You can also expand a map {} using into 
+
+
+    #+BEGIN_SRC clojure
+      (into {:favorite-animal "kitty"} {:least-favorite-smell "dog"
+					:relationship-with-teenager "creepy"})
+    #+END_SRC
+
+    into is awesome at taking two collections and adding all the 
+    elements of the second into the first. 
+
+*** conj
+
+    conj adds elements to a collection, but it does it in a slightly 
+    different way. 
+
+    
+    #+BEGIN_SRC clojure
+      (conj [0] [1])
+    #+END_SRC
+
+    #+RESULTS:
+    This results in the vector [1] going inside the vector [0]
+    so we get something that looks like [0 [1]]. This is different
+    to how into works which is like the following 
+
+
+    #+BEGIN_SRC clojure
+      (into [0] [1])
+    #+END_SRC
+
+    #+RESULTS:
+    This results in a flattened vector [0 1]
+
+    If we wanted the same result as into above using conj we would
+    have to do the following 
+
+    #+BEGIN_SRC clojure
+      (conj [0] 1)
+    #+END_SRC
+
+    This means that scalars can be passed into a datastructure 
+    using conj. When using into the other thing must be a 
+    collection. This is the main difference. 
+
+    
+    #+BEGIN_SRC clojure
+      (conj [0] 1 2 3 4)
+    #+END_SRC
+
+    With conj you can supply as many elements as you like to a 
+    collection like you see above. 
+
+    Or you can use conj to add elements to other collections 
+
+    
+    #+BEGIN_SRC clojure
+      (conj {:time "midnight"} [:place "ye olde cemtarium"])
+    #+END_SRC
+
+    conj and into are so similar that you could define conj 
+    in terms of into 
+
+    
+    #+BEGIN_SRC clojure
+      (defn my-conj
+	"Documenation: "
+	[target & additions]
+	(into target additions))
+    #+END_SRC
+
+** Function Functions
+
+*** apply
+
+    apply explodes a seqable data structure so it can be passed
+    to a function that expects a rest parameter. 
+
+    An example of a function that expects a rest parameter is 
+    max. 
+
+
+    #+BEGIN_SRC clojure
+      (max 0 1 2)
+    #+END_SRC
+
+    This means that you can't just pass a collection because 
+    max can't make sense of 
+
+    
+    #+BEGIN_SRC clojure
+      (max [0 1 2])
+    #+END_SRC
+
+    There is no such thing as a max of a vector. 
+
+    however... apply allows the max to be found so that the data 
+    can be passed into 
+
+
+    #+BEGIN_SRC clojure
+      (apply max [0 1 2])
+    #+END_SRC
+
+    Here apply exploded the elemetns of the vector so that they 
+    are passed to max as arguments. 
+
+    You can also use a combination of apply and conj to redefine 
+    into 
+
+
+    #+BEGIN_SRC clojure
+      (defn my-into
+	[target additions]
+	(apply conj target additions))
+    #+END_SRC
+
+    I think of apply as having the power to remove the braces 
+    from a collection and then feed that collection into a function
+    that expects a variable number of arguments, like max. 
+
+    The following to satements are equivalent
+
+
+    #+BEGIN_SRC clojure
+      (my-into [0] [1 2 3])
+
+      (conj [0] 1 2 3)
+    #+END_SRC
+
+*** into and conj summary
+
+    into and conj both add things to collections but there is a 
+    difference. 
+
+    into adds 1 other collection to an original collection 
+
+    conj adds any numbers of scalars to a collection
+
+    That's the key. 
+
+    apply allows you to define into in terms of conj because 
+    apply will explode the second collection which is supplied to 
+    into 
+
+
+*** partial 
+    
+    partial takes a function and any number of arguments. 
+    it then returns a new function. When you call this function
+    the originally supplied function is called with the original
+    argumuments you supplied it along with the new arguments
+
+
+    #+BEGIN_SRC clojure
+      (def add10 (partial + 10))
+
+      (add10 3)
+
+      (add10 5)
+    #+END_SRC
+
+    We could define a more complex function that uses partial 
+
+    
+    #+BEGIN_SRC clojure
+      (def add-missing-elements (partial conj ["water" "earth" "air"]))
+
+      (add-missing-elements "unobtainium" "adamantium")
+    #+END_SRC
+
+    partial basically allows you to to write unfinished expressions
+    which are functions. Then you can fill out the rest of the 
+    function later on by supplying arguments to your new partial
+    function. 
+
+    Here is a way that you define partial
+
+
+    #+BEGIN_SRC clojure
+      (defn my-partial
+	"Documenation: "
+	[partialized-fn & args]
+	(fn [& more-args]
+	  (apply partialized-fn (into args more-args))))
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/my-partial
+
+    You can see how my-partial defintely returns a function, 
+    so what is the nature of that function? 
+
+    Well this function that is returned must take a function and 
+    a rest parameter of args as input parameters. 
+    And then a function is returned which applies the supplied 
+    function to a collection which is the combination of args 
+    and more-args. However args and more-args can't be realised 
+    until more-args are supplied when the partial function is used
+
+    
+    #+BEGIN_SRC clojure
+      (def add20 (my-partial + 20))
+
+      (add20 30)
+    #+END_SRC
+
+    #+RESULTS:
+    : #'user/add20
+
+    Partial is cooool. 
+
+    So when do you want to use partials in general? 
+
+    If you are repeating the same combination of function and 
+    arguements in many different contexts, this is the time to 
+    use partial.
+
+    
+    #+BEGIN_SRC clojure
+      (defn lousy-logger
+	"Documenation: "
+	[log-level message]
+	(condp = log-level
+	    :warn (clojure.string/lower-case message)
+	    :emergency (clojure.string/upper-case message)))
+    #+END_SRC
+
+    We could then define a function warn using partial which 
+    will always return a lower-case message. This is the same 
+    as calling the lousy-logger directly. 
+
+
+    #+BEGIN_SRC clojure
+      (def warn (partial lousy-logger :warn))
+
+      (warn "Red light ahead")
+    #+END_SRC
+
+    Partial is another tool of indirection. 
+
+*** complement 
+
+    complement is an abstraction that allows you to quickly 
+    define the opposite of a defined predicate. 
+
+
+    #+BEGIN_SRC clojure
+      (defn identify-humans
+	"Documenation: "
+	[social-security-numbers]
+	(filter #(not (vampire? %))
+		(map vampire-related-details social-security-numbers)))
+    #+END_SRC
+
+    #(not (vampire? %)) is a common function syntax that has its 
+    own abstraction so that we get the same idea with less
+    syntax
+
+
+    #+BEGIN_SRC clojure
+      (def not-vampire? (complement vampire?))
+
+      (defn identify-humans
+	"Documenation: "
+	[social-security-numbers]
+	(filter not-vampire?
+		(map vampire-related-details social-security-numbers)))
+    #+END_SRC
+
+    Here's how you might define complement
+
+
+    #+BEGIN_SRC clojure
+      (defn my-complement
+	"Documenation: "
+	[fun]
+	(fn [& args]
+	  (not (apply fun args))))
+    #+END_SRC
+
+    And here is an example of using my-complement
+
+
+    #+BEGIN_SRC clojure
+      (def my-pos? (complement neg?))
+
+      (my-pos? 1)
+
+      (my-pos? -1)
+    #+END_SRC
+
+** A Vampire Data Analysis Program for the FWPD
+
+   
+
+** Summ	
+* Chapter 5: Functional Programming
+
+  In this chapter you are going to learn about what exactly a pure function
+  is and why they are so useful. How to work with immutable data structures
+  and why they're uperior to their mutable cousins. How disentangling data
+  and functions gives you more power and flexiblility and why it's powerful
+  to program to a small set of data abstractions. This will give you a new 
+  set of tools to be able to solve problems. 
+
+** Pure Functions: What and Why
+
+   A pure function has 2 properties: 
+
+   1) When applied to the same arguments it returns the same result.
+      The technical term for this is referential transparency.
+
+      The rand function is not referentially transparent because when it 
+      is applied to the same arguments it does not always return the same 
+      result.
+
+   2) It can't cause any side effects. The function cannot make any 
+      changes to things that are outside of its scope. Within it's scope 
+      things can change, but outside things can't change. 
+      Therefore it can't make changes to an externally accessible mutable
+      object or write to a file.
+
+   The first benefit of these two properties is that pure functions 
+   can't break other parts of a system meaning is one less thing to have to 
+   worry about. The second benefit is they are consistent, passing in the 
+   same arguments will always return the same result. 
+
+*** Pure Functons Are Referentially Transparent
+
+    To ensure that a function is Referentially Transparent (that when it 
+    is applied to the same arguments it returns the same result) there are 
+    2 things that a pure function relies on 
+
+    1) their own arguments 
+    2) immutable values to determine their own value 
+
+    Mathematical functions are Referentially Transparent
+
+    #+BEGIN_SRC clojure
+      (+ 1 2)
+    #+END_SRC
+
+    A function that relies on an immutable value is referentially transparent.
+    The string ", Daniel-san" is immutable, so the following function is also 
+    Referentially Transparent
+
+    #+BEGIN_SRC clojure
+      (defn wisdom
+	"Documenation: "
+	[words]
+	(str words ",Daniel-san"))
+    #+END_SRC
+
+    And here's an example of its use
+
+
+    #+BEGIN_SRC clojure
+      (wisdom "Alwas bathe on Firdays")
+    #+END_SRC
+
+    Here are a couple of example of functions that are not Referentially 
+    Transparent (a function that when applied to some arguments returns 
+    the same result).
+
+    #+BEGIN_SRC clojure
+      (defn year-end-evaluation
+	"Documenation: "
+	[]
+	(if (> (rand) 0.5)
+	  "You get a raise!"
+	  "Better luck next year!"))
+    #+END_SRC
+
+    A function that reads from a file is not Referentially Transparent 
+    because a file's contents is liable to change.
+
+    #+BEGIN_SRC clojure
+      (defn analysis
+	"Documenation: "
+	[text]
+	(str "Character count: " (count text)))
+
+      (defn analyze-file
+	"Documenation: "
+	[filename]
+	(analysis (slurp filename)))
+    #+END_SRC
+
+    If a function is Referentially Transparent yo never have to consider
+    what possible external conditions could affect the return value of 
+    the function. This is especially the case if the function is used in
+    multiple places
+
+
+*** Pure Functions Have No Side Effects
+** Living with Immutable Data Structures
+*** Recursion Instead of for/while
+*** Function Composition Instead of Attribute Mutation
+** Cool Things to Do with Pure Functions
+*** comp
+*** memoize
+** Peg Thing 
+*** Playing
+*** Code Organization#
+*** Creating the Board
+*** Moving Pegs
+*** Rendering and Printing the Board
+*** Player Interaction
+** Summary
 
