@@ -2769,16 +2769,337 @@
     If a function is Referentially Transparent yo never have to consider
     what possible external conditions could affect the return value of 
     the function. This is especially the case if the function is used in
-    multiple places
+    multiple places or if it is nested deeply in a chain of function
+    calls. External conditions won't cause your function to break! 
+    This gives you peace of mind. 
 
+    You can think of reality as largely speaking, Referentially Transparent.
+    If you think of gravity as a function that takes two objects as arguments
+    like the apple and the earth. It will act on the apple in the same way 
+    whatever happens. 
 
 *** Pure Functions Have No Side Effects
+
+    In object oriented programs, objects have properties like a person
+    could have a name, this is easily demonstrated in javascript: 
+
+    var haplessObject = {
+    emotion: "Carefree!"
+    };
+
+    We could then have a function that actos on the property of such an object,
+    in this case we have a property called emotion, so this is how such 
+    a function might be designed in javascript
+
+    var evilMutator = function(object){ 
+    object.emotion = "So emo :'(";
+    } 
+
+    The haplessObject's property is changed when evilMutator is applied to 
+    it
+
+    evilMutator(HaplessObject);
+    haplessObject.emotion; 
+    
+    The author explains how an object can change and it can make you feel 
+    a bit lost if you don't understand where a change is happening because 
+    something has changed state and you don't know where a side effect is 
+    coming from. 
+    Clojure uses Immutable Data Structures as it's core set of datastructures.
+    This means that your hands are tied behind your back compared to the 
+    normal ways you are used to of programming, as you are taught assignment
+    and reassignment from day one when you first learn to program. 
+    So how does one do anything when there aren't any side effects... we 
+    now segue...
+
 ** Living with Immutable Data Structures
+
+   So how do you get anything done without any side effects? 
+
 *** Recursion Instead of for/while
+
+    
+
+    #+BEGIN_SRC clojure
+      (def great-baby-name "Rosanthony")
+
+      great-baby-name
+
+      (let [great-baby-name "Bloodthunder"]
+	great-baby-name)
+
+      great-baby-name 	
+    #+END_SRC
+
+    In the above example great-babe-name is assigned what seems to be 
+    twice. However there are 2 scopes which means that great-baby-name
+    is not assigned twice but they are in fact 2 different variables. 
+
+    Recursion allows you to get past this apparent limitation, here is an 
+    example: 
+
+    
+
+    #+BEGIN_SRC clojure
+      (defn sum
+	"Documenation: "
+	([vals] (sum vals 0))
+	([vals accumulating-total]
+	 (if (empty? vals)
+	   accumulating-total
+	   (sum (rest vals) (+ (first vals) accumulating-total)))))
+    #+END_SRC
+
+    We are quite used to recursion. The above is a variation of 
+    accumulate page 45,116 of SICP using the idea of Ex 1.30 page 60. 
+    
+    Here is how you could visualise the way that the function is doing 
+    things
+
+    #+BEGIN_SRC clojure
+      (sum [39 5 1])
+
+      (sum [39 5 1] 0)
+
+      (sum [5 1] 39)
+
+      (sum [1] 44)
+
+      (sum [] 45)
+    #+END_SRC
+
+    I've never really thought about this before but every single one of the 
+    above evaluates to 45. It's really interesting. It's like you get closer
+    to the "true" value but in reality there has always be this value that
+    never changes the whole way through. 
+
+    In reality you wouldn't use recursion in this way when using Clojure 
+    because it doesn't provide Tail Call optimization which is what Scheme
+    does provide. However we can get high performance if we instead use 
+    the 'recur' construct and rewrite the function
+
+    #+BEGIN_SRC clojure
+      (defn sum
+	"Documenation: "
+	([vals]
+	 (sum vals 0))
+	([vals accumulating-total]
+	 (if (empty? vals)
+	   accumulating-total
+	   (recur (rest vals) (+ (first vals) accumulating-total)))))
+    #+END_SRC
+    
+    Notice that recur goes in the place where you would have done the 
+    recursive call in this case and that's the only change you need to make
+    to the function to get all the beneifits of making the change. 
+
 *** Function Composition Instead of Attribute Mutation
+
+    In Object oriented languages you may instantiate an object with a 
+    variable of some sort like a string. However you may insert a function
+    to where the internal variables are assigned to ensure that all Objects
+    that are instantiated with such a string are "Formalised" and the same.
+    This means that as the objet is instantiated, the instance variable is 
+    mutated. 
+
+    You may want to do a similar thing in Clojure so the following is an example 
+    of how one might attempt to try and do this.
+
+    #+BEGIN_SRC clojure
+      (require '[clojure.string :as s])
+
+      (defn clean
+	"Documenation: "
+	[text]
+	(s/replace (s/trim text) #"lol" "LOL"))
+    #+END_SRC
+
+    Here we have composed to clojure string functions to make sure 
+    that the text we get is cleaned. s/trim and s/replace are both pure 
+    functions. The philosophy of functional programming is to build more 
+    complex functions from simple ones step by step. 
+
+    I think the mindset you get from functional programming is cool because
+    it's similar to that in physics. That you're trying to build a system 
+    with initial conditions, which would be the data and the function you
+    can think of as some sort of perterbation. However I think you can 
+    always get back the original condition. I'm not sure if it is reversible
+    in the way some processes in physics are but it's something along those 
+    lines. 
+
 ** Cool Things to Do with Pure Functions
+
+   Here we learn about two new functions that are quite interesting
+
 *** comp
+    
+
+    #+BEGIN_SRC clojure
+      ((comp inc *) 2 3)
+    #+END_SRC
+    
+    This is a simple use of comp which is self explainatory. 
+    
+    Here is a more complex example 4
+
+    #+BEGIN_SRC clojure
+      (def character
+	{:name "Smooches McCutes"
+	 :attributes {:intelligence 10
+		      :strength 4
+		      :dexterity 5}})
+
+      (def c-int (comp :intelligence :attributes))
+      (def c-str (comp :strength :attributes))
+      (def c-dex (comp :dexterity :attributes))
+    #+END_SRC
+
+    Here we have a block of data in character and essentially we have used
+    comp to create getter functions for that piece of data. Awesome! 
+
+    #+BEGIN_SRC clojure
+      (c-int character)
+      (c-str character)
+      (c-dex character)
+    #+END_SRC
+
+    Below is a simple which calculates the number of spell-slots your 
+    character may have: 
+
+    #+BEGIN_SRC clojure
+      (defn spell-slots
+	"Documenation: "
+	[char]
+	(int (inc (/ (c-int char) 2))))
+
+      (spell-slots character)
+    #+END_SRC
+
+    We could recreate the same functionality using comp instead 
+
+    #+BEGIN_SRC clojure
+      (def spell-slots-comp (comp int inc #(/ % 2) c-int))
+
+      (spell-slots-comp character)
+    #+END_SRC
+
+    This is so tasty. Seriously. 
+
+    More importantly the anonymous function allowed us to use a function 
+    that takes more than one argument, divide. 
+
+    Here is a way that we define comp that works specifically for just 
+    2 functions.
+
+    #+BEGIN_SRC clojure
+      (defn two-comp
+	"Documenation: "
+	[f g]
+	(fn [& args]
+	  (f (apply g args))))
+
+      ((two-comp inc *) 2 3)
+    #+END_SRC
+
+**** Exercise: Define your own comp
+
+     I'm thinking of using through a rest parameter. The other thing 
+     is that my-comp must return a function so I think I want to use 
+     an anonymous function so that I get function returned. 
+
+     I'm thinking you want to use the two-comp function that has already
+     been defined but you also want to have another two-comp2 function 
+     that doesn't work work with a rest parameter. 
+
+     I think we also may need to use an if statement so that when we apply the first
+     funtion on the args it is using the two-comp from the book, but after that we 
+     we want to use two-comp2. 
+
+     We are also going to need some sort of recursive call some where so that we loop
+     through the list of funcs that is supplied. 
+
+     #+BEGIN_SRC clojure
+       (defn two-comp2
+	 "Documenation: "
+	 [f g]
+	 (fn [arg]
+	   (f (g arg))))
+
+
+       (defn my-comp
+	 "Documenation: "
+	 [& funcs]
+	 (let [[frst scnd thrd & rest] funcs]
+	   (if (nil? thrd)
+	   (two-comp frst scnd)
+	   (two-comp2 frst (my-comp (rest funcs))))))
+
+
+       ((my-comp inc inc) 3)
+
+       ((my-comp inc inc inc) 3)
+
+
+     #+END_SRC
+
+     #+RESULTS:
+     
+     I think the answer is along these lines.
+
+
 *** memoize
+
+    Memoization takes advantage of referential transparency. 
+    Since these sort of functions always return the same result, 
+    if one takes a particularly long amount of time to run you 
+    can memoize the function so that the first time it is called it takes
+    a while, but from then on it immediately prdouces the result. 
+
+    It takes advantage of the fact the following all have the same output
+    for example 
+
+
+
+    #+BEGIN_SRC clojure
+      (+ 3 (+ 5 8))
+
+      (+ 3 13)
+
+      16
+    #+END_SRC
+
+    The way we can do this for functions that take a while to process is 
+    as follows but first let's define a function that will take a second 
+    to respond. 
+
+    
+
+    #+BEGIN_SRC clojure
+      (defn sleepy-identity
+	"Returns the given value after 1 second"
+	[x]
+	(Thread/sleep 1000)
+	x)
+
+      (sleepy-identity "Mr.Fantastico")
+    #+END_SRC
+
+    This function will always take a second to run in its current state, 
+    but we can change this if we use memoizatiation as follows
+
+    
+
+    #+BEGIN_SRC clojure
+      (def memo-sleepy-identity (memoize sleepy-identity))
+      (memo-sleepy-identity "Mr Fatastico")
+
+      (memo-sleepy-identity "Mr. Fantastico")
+    #+END_SRC
+
+    This kind of thing is useful when making high cost computation functions
+    or network requests.
+
+
 ** Peg Thing 
 *** Playing
 *** Code Organization#

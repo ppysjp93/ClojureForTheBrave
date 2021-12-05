@@ -118,27 +118,27 @@
 ;; Ex 4
 
 
-;; Something like this will be needed and on each record to be
-;; processed
+(map (fn [record]
+                            (str (:name record) ","
+                                 (:glitter-index record)))
+     records)
 
-
-(str (:name first-record) "," (:glitter-index first-record) "\n")
-
-;; I'm also thinking that reduce will be neeeded with an initial empty
-;; string and then build it up. 
-
-
-(reduce str "" ["hello" "sam"])
-
-(reduce (fn [final record]
-          (into final (identity record)))
-        []
-        records)
-
-
+;; says we should use clojure.string/join function
 
 (clojure.string/join "\n"
                      (map (fn [record]
                             (str (:name record) ","
                                  (:glitter-index record)))
                           records))
+
+(defn Convert-To-CSV
+  "Documenation: "
+  [records]
+  (clojure.string/join "\n"
+                     (map (fn [record]
+                            (str (:name record) ","
+                                 (:glitter-index record)))
+                          records)))
+
+
+(=(Convert-To-CSV records) (slurp filename))
